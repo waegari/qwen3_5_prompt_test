@@ -31,13 +31,14 @@
   ```
 - [ ] **패키지 설치**: Powershell에서 아래 명령어를 실행하여 GPU 가속이 포함된 라이브러리 설치
   ```Powershell
-  pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
+  $env:CMAKE_ARGS="-DGGML_CUDA=on"
+  pip install --upgrade --force-reinstall --no-cache-dir llama-cpp-python
   ```
   
 ## 4. GGUF 형식의 LLM 준비
 - GGUF: Georgi Gerganov Unified Format
   - 모델 가중치 등의 효율적 저장 / 고속 로딩을 위해 만들어진 포맷. [HF docs](https://huggingface.co/docs/hub/gguf)
-- [Qwen3.5-9B](https://huggingface.co/unsloth/Qwen3.5-9B-GGUF) 모델을 `프로젝트 루트/models` 경로에 다운로드
+- [Qwen3.5-9B](https://huggingface.co/unsloth/Qwen3.5-9B-GGUF) 모델을 `3_5_prompt_test/models` 경로에 다운로드
 
 - 모델명 중 'nB'는 learnable parameter의 수를 의미
 - BF16, FP16 등 16bit floating point 데이터 타입의 경우 파라미터당 약 2byte (16 bit) 저장 공간 차지
@@ -45,3 +46,15 @@
   - BF16 / FP16 모델 크기: 180억 bytes $\simeq$ 18GB
 - GGUF가 지원하는 8 bits 양자화된 모델의 경우
   - 90억 bytes $\simeq$ 9GB
+
+## 5. test.py 실행
+- Visual Studio Code 실행
+- `Open Folder` 버튼 클릭 / 혹은 `Ctrl` + `K` + `O`
+- `3_5_prompt_test` 폴더 선택해 열기
+
+- `View` -> `Terminal` 선택 / 혹은 Ctrl + ` 키로 Terminal 열기
+
+- 다음 명령어 입력해 테스트
+```Powershell
+python test.py
+```
