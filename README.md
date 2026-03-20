@@ -12,6 +12,8 @@
     git -v
     ```
 - [ ] **Visual Studio Code**: 코드 에디터 [설치](https://code.visualstudio.com/)
+- [ ] **Visual Studio**: cpp build 도구 등 포함 [다운로드](https://visualstudio.microsoft.com/ko/downloads/)
+  - 주의! Visual Studio 먼저 설치하고 CUDA Toolkit을 설치할 것! 순서 엄수!
 
 ## 2. GPU 환경 세팅 (16GB VRAM 기준)
 - [ ] **NVIDIA 드라이버**: 최신 버전으로 [업데이트](https://www.nvidia.com/ko-kr/drivers/)
@@ -32,7 +34,9 @@
 - [ ] **패키지 설치**: Powershell에서 아래 명령어를 실행하여 GPU 가속이 포함된 라이브러리 설치
   ```Powershell
   $env:CMAKE_ARGS="-DGGML_CUDA=on"
-  pip install --upgrade --force-reinstall --no-cache-dir llama-cpp-python
+  $env:CMAKE_ARGS="-DGGML_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=all"
+  $env:FORCE_CMAKE="1"
+  pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
   ```
   
 ## 4. GGUF 형식의 LLM 준비
