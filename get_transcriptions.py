@@ -9,7 +9,7 @@ def get_transcription(job_id):
         response = requests.get(URL, params={"job_id": job_id})
         response.raise_for_status() 
         json_data = response.json()
-        # print(json.dumps(json_data, indent=4, ensure_ascii=False))
+        print(f"jobId: {json_data['job_id']}")
         return json_data
        
     except requests.exceptions.HTTPError as http_err:
@@ -23,7 +23,8 @@ def get_transcriptions():
         response = requests.get(URL)
         response.raise_for_status() 
         json_data = response.json()
-        # print(json.dumps(json_data, indent=4, ensure_ascii=False))
+        jobIds = [ {idx: item['job_id']} for idx, item in enumerate(json_data['items'])]
+        print(f"jobIds: {jobIds}")
         return json_data
        
     except requests.exceptions.HTTPError as http_err:
