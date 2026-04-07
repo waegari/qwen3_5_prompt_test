@@ -7,7 +7,13 @@ from llama_cpp import Llama
 
 from send_result import send_json_to_server
 from reconstruction_indices import assign_indices_from_reconstruction
-from prompts import SUMMARIZATION_PROMPT, RECONSTRUCTION_PROMPT, STT_INPUT_DATA, JOB_ID  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
+from prompts import (
+    SUMMARIZATION_PROMPT,
+    RECONSTRUCTION_PROMPT_LONG,
+    RECONSTRUCTION_PROMPT_SHORT,
+    STT_INPUT_DATA,
+    JOB_ID,
+)  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
 
 time1 = time.time()
 
@@ -87,33 +93,17 @@ if summary_res:
     total_usage['completion_tokens'] += summary_usage['completion_tokens']
     total_usage['total_tokens'] += summary_usage['total_tokens']
 
-# 2. 본문(Reconstruction) 처리를 위한 청크 분할
-chunks = []
-start_idx = 0
-text_len = len(STT_INPUT_DATA)
-chunk_size = calc_chunk_size(5000, text_len)
+def count_lines(text: str) -> int:
+    return sum(1 for line in text.splitlines() if line.strip())
 
-while start_idx < text_len:
-    if text_len - start_idx <= chunk_size:
-        chunks.append(STT_INPUT_DATA[start_idx:])
-        break
-    
-    end_idx = start_idx + chunk_size
-    next_newline = STT_INPUT_DATA.find('\n', end_idx - 1)
-    
-    if next_newline == -1:
-        chunks.append(STT_INPUT_DATA[start_idx:])
-        break
-    else:
-        chunks.append(STT_INPUT_DATA[start_idx:next_newline + 1])
-        start_idx = next_newline + 1
+segment_count = count_lines(STT_INPUT_DATA)
+print(f"segment_count(non-empty lines): {segment_count}")
 
-# 3. 청크별 추론 (Reconstruction만 추출)
-for i, chunk in enumerate(chunks):
-    print(f"inference (reconstruction): {i+1}/{len(chunks)}, len(chunk): {len(chunk)}")
-    
-    parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT, chunk)
-    
+if segment_count <= 15:
+    # transcription 짧으면(15행 이하) depth-2 tree 구조로 재구성
+    print("Short script detected (<=15 lines). Using short reconstruction prompt.")
+    parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT_SHORT, STT_INPUT_DATA)
+
     if parsed_res:
         recon_data = parsed_res.get('reconstruction', [])
         if isinstance(recon_data, list):
@@ -124,6 +114,45 @@ for i, chunk in enumerate(chunks):
     total_usage['prompt_tokens'] += usage['prompt_tokens']
     total_usage['completion_tokens'] += usage['completion_tokens']
     total_usage['total_tokens'] += usage['total_tokens']
+else:
+    # transcription이 15행 초과하면 depth-3 forest 구조로 재구성
+    # 2. 본문(Reconstruction) 처리를 위한 청크 분할
+    chunks = []
+    start_idx = 0
+    text_len = len(STT_INPUT_DATA)
+    chunk_size = calc_chunk_size(5000, text_len)
+
+    while start_idx < text_len:
+        if text_len - start_idx <= chunk_size:
+            chunks.append(STT_INPUT_DATA[start_idx:])
+            break
+
+        end_idx = start_idx + chunk_size
+        next_newline = STT_INPUT_DATA.find('\n', end_idx - 1)
+
+        if next_newline == -1:
+            chunks.append(STT_INPUT_DATA[start_idx:])
+            break
+        else:
+            chunks.append(STT_INPUT_DATA[start_idx:next_newline + 1])
+            start_idx = next_newline + 1
+
+    # 3. 청크별 추론 (Reconstruction만 추출)
+    for i, chunk in enumerate(chunks):
+        print(f"inference (reconstruction): {i+1}/{len(chunks)}, len(chunk): {len(chunk)}")
+
+        parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT_LONG, chunk)
+
+        if parsed_res:
+            recon_data = parsed_res.get('reconstruction', [])
+            if isinstance(recon_data, list):
+                final_reconstruction.extend(recon_data)
+            elif isinstance(recon_data, dict):
+                final_reconstruction.append(recon_data)
+
+        total_usage['prompt_tokens'] += usage['prompt_tokens']
+        total_usage['completion_tokens'] += usage['completion_tokens']
+        total_usage['total_tokens'] += usage['total_tokens']
 
 # 4. 최종 결과 조립
 final_result = {
@@ -148,9 +177,6 @@ print("AI 분석 결과 (JSON):")
 print(json.dumps(final_result, ensure_ascii=False, indent=2))
 print("=====================================")
 
-
-# main_task.py (요약 실행 파일)
-from send_result import send_json_to_server # 작성하신 코드를 import
 
 # 1. 작업 식별자 결정 (예: 20260406_001)
 current_job_id = JOB_ID
