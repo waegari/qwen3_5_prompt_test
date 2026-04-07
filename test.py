@@ -6,6 +6,7 @@ from math import ceil, floor
 from llama_cpp import Llama
 
 from send_result import send_json_to_server
+from reconstruction_indices import assign_indices_from_reconstruction
 from prompts import SUMMARIZATION_PROMPT, RECONSTRUCTION_PROMPT, STT_INPUT_DATA, JOB_ID  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
 
 time1 = time.time()
@@ -57,23 +58,6 @@ def get_response(system_prompt, input_data, max_tokens=-1, temperature=0.1):
 
     parsed_data, raw_content = json_parse(response)
     return parsed_data, raw_content, response['usage']
-
-def merge_reconstruction(target_list, new_item):
-    if not new_item or 'index' not in new_item:
-        return
-        
-    indices = [int(i) - 1 for i in new_item['index'].split('_')] 
-    
-    curr = target_list
-    for i in range(len(indices) - 1):
-        idx = indices[i]
-        while len(curr) <= idx:
-            curr.append({"index": str(idx+1), "subitems": []})
-        if "subitems" not in curr[idx]:
-            curr[idx]["subitems"] = []
-        curr = curr[idx]["subitems"]
-    
-    curr.append(new_item)
 
 def calc_chunk_size(base:int, text_length:int) -> int:
     q = text_length / base
@@ -131,13 +115,11 @@ for i, chunk in enumerate(chunks):
     parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT, chunk)
     
     if parsed_res:
-        # 이 루프에서는 reconstruction 데이터만 수집합니다.
         recon_data = parsed_res.get('reconstruction', [])
         if isinstance(recon_data, list):
-            for item in recon_data:
-                merge_reconstruction(final_reconstruction, item)
+            final_reconstruction.extend(recon_data)
         elif isinstance(recon_data, dict):
-            merge_reconstruction(final_reconstruction, recon_data)
+            final_reconstruction.append(recon_data)
 
     total_usage['prompt_tokens'] += usage['prompt_tokens']
     total_usage['completion_tokens'] += usage['completion_tokens']
@@ -149,6 +131,7 @@ final_result = {
     "overview": current_overview,
     "reconstruction": final_reconstruction
 }
+assign_indices_from_reconstruction(final_result)
 
 time3 = time.time()
 
