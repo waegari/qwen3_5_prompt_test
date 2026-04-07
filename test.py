@@ -59,7 +59,19 @@ def get_response(system_prompt, input_data, max_tokens=-1, temperature=0.1):
     return parsed_data, raw_content, response['usage']
 
 def merge_reconstruction(target_list, new_item):
-    #TODO: index 붙이기!
+    if not new_item or 'index' not in new_item:
+        return
+        
+    indices = [int(i) - 1 for i in new_item['index'].split('_')] 
+    
+    curr = target_list
+    for i in range(len(indices) - 1):
+        idx = indices[i]
+        while len(curr) <= idx:
+            curr.append({"index": str(idx+1), "subitems": []})
+        if "subitems" not in curr[idx]:
+            curr[idx]["subitems"] = []
+        curr = curr[idx]["subitems"]
     
     curr.append(new_item)
 
