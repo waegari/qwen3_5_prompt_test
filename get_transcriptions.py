@@ -57,7 +57,9 @@ def get_simple_transcriptions():
 # get_simple_transcription(단수형) 함수도 구조를 맞춰줍니다
 def get_simple_transcription(job_id):
     response = get_transcription(job_id)
+    content = get_simple_segments(response['transcription']['transcription']['segments'])
     return {
         "job_id": response['job_id'],
-        "content": get_simple_segments(response['transcription']['transcription']['segments'])
+        "content": content,
+        "length": len(content),
     }
