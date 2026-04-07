@@ -7,8 +7,8 @@ import json
 from get_transcriptions import get_simple_transcriptions, get_simple_transcription
 
 # 1. 먼저 전체 데이터를 가져온 뒤
-# raw_data = get_simple_transcriptions()[0]
-raw_data = get_simple_transcription('2026040610264350')  # audio duration $\simeq$ 18000
+raw_data = get_simple_transcriptions()[0]
+# raw_data = get_simple_transcription('2026040610264350')  # audio duration $\simeq$ 18000
 # raw_data = get_simple_transcription('2026032711584976')  # audio duration $\simeq$ 5000
 # raw_data = get_simple_transcription('2026032709563464')  # audio duration $\simeq$ 2500
 # raw_data = get_simple_transcription('2026032709493241')  # audio duration $\simeq$ 600

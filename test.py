@@ -146,7 +146,7 @@ final_result = {
 time3 = time.time()
 
 print("=====================================")
-print(f"작업 ID (Job ID): {JOB_ID}")  # 이 줄을 추가하세요
+print(f"작업 ID (Job ID): {JOB_ID}!")  # 이 줄을 추가하세요
 print(f"모델 로드: {time2-time1:.2f}초")
 print(f"추론: {time3-time2:.2f}초")
 print(f"총 소요시간: {time3-time1:.2f}초")
@@ -163,7 +163,7 @@ print("=====================================")
 from send_result import send_json_to_server # 작성하신 코드를 import
 
 # 1. 작업 식별자 결정 (예: 20260406_001)
-current_job_id = "2026040610264350_5000" 
+current_job_id = JOB_ID
 
 
 # 3. 서버로 전송
