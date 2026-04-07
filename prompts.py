@@ -61,23 +61,19 @@ RECONSTRUCTION_PROMPT = """
 {
   "reconstruction": [
     {
-      "index": "1",
       "content": "대주제 (첫 번째 섹션 제목)",
       "start": 0.0,
       "subitems": [
         {
-          "index": "1_1",
           "content": "중주제 (세부 섹션 제목)",
           "start": 0.0,
           "subitems": [
             {
-              "index": "1_1_1",
               "content": "소주제 또는 정제된 하이라이트 문장",
               "start": 0.0
             },
             {
-              "index": "1_1_2",
-              "content": "추가적인 세부 상세 내용",
+ß              "content": "추가적인 세부 상세 내용",
               "start": 0.0
             }
           ]
