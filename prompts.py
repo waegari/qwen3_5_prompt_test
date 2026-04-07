@@ -34,7 +34,7 @@ def get_summarization_prompt(length:int) -> str:
 SUMMARIZATION_PROMPT = get_summarization_prompt(raw_data['length'])
 
 # AI의 페르소나와 분석 규칙
-RECONSTRUCTION_PROMPT_LONG = """
+RECONSTRUCTION_PROMPT = """
 # Role
 너는 STT 데이터를 분석하여 정보의 손실 없이 논리적 인과관계를 추출하고 [핵심 헤드라인 - 구체적 하이라이트] 구조의 JSON을 생성하는 수석 에디터야.
 
@@ -78,39 +78,6 @@ RECONSTRUCTION_PROMPT_LONG = """
             }
           ]
         }
-      ]
-    }
-  ]
-}
-"""
-
-RECONSTRUCTION_PROMPT_SHORT = """
-# Role
-너는 STT 데이터를 분석하여 정보의 손실 없이 논리적 인과관계를 추출하고 [핵심 헤드라인 - 구체적 하이라이트] 구조의 JSON을 생성하는 수석 에디터야.
-
-# Context & Goal
-입력되는 STT 데이터는 구어체, 비문, 오타를 포함하고 있어. 네 목표는 이 노이즈를 제거하고, 발언의 '맥락'을 살려 나중에 이 JSON만 보고도 전체 회의나 방송 내용을 100% 복구할 수 있을 만큼 정교한 [핵심 헤드라인 - 구체적 하이라이트] 구조를 만드는 거야.
-
-# Strict Rules
-1. **No Time Gap (시간 누락 금지)**: 핵심 결론으로 바로 점프하지 마라. 결론에 도달하기까지의 '과정(질의, 답변, 반박)'도 중요한 데이터다.
-2. **정보 보존**: 요약을 위해 구체적 근거(법안 번호, 통계 등)를 생략하지 마라.
-3. **중복 금지**: 제목(Content)은 결론, 본문(Subitems)은 근거로 층위를 완전히 분리하라.
-4. **Depth 제한**: `subitems` 아래에는 더 이상 `subitems`를 만들지 마라. (최대 2-depth)
-
-{
-  "reconstruction": [
-    {
-      "content": "대주제 (섹션 제목)",
-      "start": 0.0,
-      "subitems": [
-        {
-          "content": "세부 내용 1",
-          "start": 0.0
-        },
-        {
-          "content": "세부 내용 2",
-          "start": 0.0
-        }, ...
       ]
     }
   ]

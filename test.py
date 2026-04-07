@@ -9,8 +9,7 @@ from send_result import send_json_to_server
 from reconstruction_indices import assign_indices_from_reconstruction
 from prompts import (
     SUMMARIZATION_PROMPT,
-    RECONSTRUCTION_PROMPT_LONG,
-    RECONSTRUCTION_PROMPT_SHORT,
+    RECONSTRUCTION_PROMPT,
     STT_INPUT_DATA,
     JOB_ID,
 )  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
@@ -100,20 +99,25 @@ segment_count = count_lines(STT_INPUT_DATA)
 print(f"segment_count(non-empty lines): {segment_count}")
 
 if segment_count <= 15:
-    # transcription 짧으면(15행 이하) depth-2 tree 구조로 재구성
-    print("Short script detected (<=15 lines). Using short reconstruction prompt.")
-    parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT_SHORT, STT_INPUT_DATA)
+    # transcription 짧으면(15행 이하) 발화 내용 그대로 reconstruction 필드 채움
+    print("Short script detected (<=15 lines). Not using LLM for reconstruction.")
+    for line in STT_INPUT_DATA.splitlines():
+        line = line.strip()
+        if not line:
+            continue
 
-    if parsed_res:
-        recon_data = parsed_res.get('reconstruction', [])
-        if isinstance(recon_data, list):
-            final_reconstruction.extend(recon_data)
-        elif isinstance(recon_data, dict):
-            final_reconstruction.append(recon_data)
+        # line format: "[0.0] 안녕하세요"
+        m = re.match(r"^\[(?P<start>\d+(?:\.\d+)?)\]\s*(?P<content>.*)$", line)
+        if not m:
+            continue
 
-    total_usage['prompt_tokens'] += usage['prompt_tokens']
-    total_usage['completion_tokens'] += usage['completion_tokens']
-    total_usage['total_tokens'] += usage['total_tokens']
+        final_reconstruction.append(
+            {
+                "start": float(m.group("start")),
+                "content": m.group("content"),
+            }
+        )
+
 else:
     # transcription이 15행 초과하면 depth-3 forest 구조로 재구성
     # 2. 본문(Reconstruction) 처리를 위한 청크 분할
@@ -141,7 +145,7 @@ else:
     for i, chunk in enumerate(chunks):
         print(f"inference (reconstruction): {i+1}/{len(chunks)}, len(chunk): {len(chunk)}")
 
-        parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT_LONG, chunk)
+        parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT, chunk)
 
         if parsed_res:
             recon_data = parsed_res.get('reconstruction', [])
