@@ -1,7 +1,5 @@
 
-import requests
-import json
-
+import math
 
 # 파일 상단 부분 수정
 from get_transcriptions import get_simple_transcriptions, get_simple_transcription
@@ -17,10 +15,26 @@ raw_data = get_simple_transcriptions()[0]
 JOB_ID = raw_data['job_id']
 STT_INPUT_DATA = raw_data['content']
 
-# STT_SYSTEM_PROMPT = """ ... """ (이하 프롬프트 내용은 기존과 동일)
+def get_summarization_prompt(length:int) -> str:
+    kw_cnt = max(2, round(10 * (math.log10(length) - 2)))
+    prompt = f"""Analyze the following text and provide the output strictly in JSON format.
+[Task Requirements]
+1. Extract exactly {kw_cnt} core keywords from the text.
+2. Provide a brief 2-3 sentence overview/summary of the entire text.
+3. CRITICAL The output language MUST match the original language of the input text. (e.g., If the input is in Korean, the keywords and overview must be in Korean).
+
+[Output Format]
+{{
+    "keywords": ["keyword1", "keyword2", ...],
+    "overview": "Your 2-3 sentence summary here."
+}}
+"""
+    return prompt
+  
+SUMMARIZATION_PROMPT = get_summarization_prompt(raw_data['length'])
 
 # AI의 페르소나와 분석 규칙
-STT_SYSTEM_PROMPT = """
+RECONSTRUCTION_PROMPT = """
 # Role
 너는 STT 데이터를 분석하여 정보의 손실 없이 논리적 인과관계를 추출하고 [핵심 헤드라인 - 구체적 하이라이트] 구조의 JSON을 생성하는 수석 에디터야.
 
@@ -45,8 +59,6 @@ STT_SYSTEM_PROMPT = """
 6. 수정 규칙: 외교/법적 공방 등에서 '요구하는 측'과 '부인하는 측'의 인과관계를 원문과 대조하여 주어를 절대 뒤바꾸지 마라. 
 
 {
-  "keywords": ["키워드1", "키워드2", "키워드3"],
-  "overview": "전체 텍스트의 핵심 내용을 한 줄로 요약한 문장입니다.",
   "reconstruction": [
     {
       "index": "1",

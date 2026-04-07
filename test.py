@@ -2,10 +2,11 @@ import os
 import time
 import json
 import re
+from math import ceil, floor
 from llama_cpp import Llama
 
 from send_result import send_json_to_server
-from prompts import STT_SYSTEM_PROMPT, STT_INPUT_DATA, JOB_ID  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
+from prompts import SUMMARIZATION_PROMPT, RECONSTRUCTION_PROMPT, STT_INPUT_DATA, JOB_ID  # 프롬프트 파일 임포트 # 임포트 부분에 JOB_ID 추가
 
 time1 = time.time()
 
@@ -74,6 +75,12 @@ def merge_reconstruction(target_list, new_item):
     
     curr.append(new_item)
 
+def calc_chunk_size(base:int, text_length:int) -> int:
+    q = text_length / base
+    divisor = ceil(q) if q < 4 else floor(q)
+    chunk_size = ceil(text_length / divisor)
+    return chunk_size
+
 
 final_reconstruction = []
 final_keywords = []
@@ -85,7 +92,7 @@ print("Generating overview and keywords for the entire text...")
 
 # 전체 텍스트에 대해 한 번만 호출 (프롬프트는 동일하게 사용하거나 필요시 조정 가능)
 # 단, 모델의 n_ctx 범위 내에 STT_INPUT_DATA가 들어와야 합니다.
-summary_res, summary_raw, summary_usage = get_response(STT_SYSTEM_PROMPT, STT_INPUT_DATA)
+summary_res, summary_raw, summary_usage = get_response(SUMMARIZATION_PROMPT, STT_INPUT_DATA)
 
 if summary_res:
     final_keywords = summary_res.get('keywords', [])
@@ -100,7 +107,7 @@ if summary_res:
 chunks = []
 start_idx = 0
 text_len = len(STT_INPUT_DATA)
-chunk_size = 5000
+chunk_size = calc_chunk_size(5000, text_len)
 
 while start_idx < text_len:
     if text_len - start_idx <= chunk_size:
@@ -121,7 +128,7 @@ while start_idx < text_len:
 for i, chunk in enumerate(chunks):
     print(f"inference (reconstruction): {i+1}/{len(chunks)}, len(chunk): {len(chunk)}")
     
-    parsed_res, raw_content, usage = get_response(STT_SYSTEM_PROMPT, chunk)
+    parsed_res, raw_content, usage = get_response(RECONSTRUCTION_PROMPT, chunk)
     
     if parsed_res:
         # 이 루프에서는 reconstruction 데이터만 수집합니다.
