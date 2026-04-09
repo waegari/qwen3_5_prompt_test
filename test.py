@@ -217,6 +217,9 @@ assign_indices_from_reconstruction(final_result)
 time3 = time.time()
 
 print("=====================================")
+print("AI 분석 결과 (JSON):")
+print(json.dumps(final_result, ensure_ascii=False, indent=2))
+print("-------------------------------------")
 print(f"작업 ID (Job ID): {JOB_ID}!")  # 이 줄을 추가하세요
 print(f"모델 로드: {time2-time1:.2f}초")
 print(f"추론: {time3-time2:.2f}초")
@@ -224,15 +227,16 @@ print(f"총 소요시간: {time3-time1:.2f}초")
 print(f"입력 토큰: {total_usage['prompt_tokens']}")
 print(f"출력 토큰: {total_usage['completion_tokens']}")
 print(f"토큰 합계: {total_usage['total_tokens']}")
-print("-------------------------------------")
-print("AI 분석 결과 (JSON):")
-print(json.dumps(final_result, ensure_ascii=False, indent=2))
 print("=====================================")
 
 
 # 1. 작업 식별자 결정 (예: 20260406_001)
 current_job_id = JOB_ID
 
+
+# 로컬에 json 파일로 백업
+with open(f"debug_{JOB_ID}.json", "w", encoding="utf-8") as f:
+    json.dump(final_result, f, ensure_ascii=False, indent=2)
 
 # 3. 서버로 전송
 success = send_json_to_server(final_result, current_job_id + "_Gemma_4")
