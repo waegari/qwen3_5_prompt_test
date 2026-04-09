@@ -1,4 +1,4 @@
 # run `pip install -r requirements.txt`
 # Only for Linux, Python 3.12, CUDA 13.0
 requests==2.33.1
-llama-cpp-python@https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.34-cu124-Basic-linux-20260331/llama_cpp_python-0.3.34+cu124.basic-cp312-cp312-linux_x86_64.whl
+llama-cpp-python@https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.35-cu124-Basic-linux-20260406/llama_cpp_python-0.3.35+cu124.basic-cp312-cp312-linux_x86_64.whl
