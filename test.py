@@ -67,7 +67,7 @@ def get_response(system_prompt, input_data, max_tokens=-1, temperature=0.7):
         ],
         max_tokens=max_tokens,
         temperature=temperature,
-        response_format={"type": "json_object"},
+        # response_format={"type": "json_object"},
     )
 
     parsed_data, raw_content = json_parse(response)
